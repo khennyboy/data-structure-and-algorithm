@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Modern Comment System</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: #f7f9fb;
+        margin: 0;
+        padding: 30px;
+      }
+
+      h2 {
+        color: #333;
+      }
+
+      .comment,
+      .reply {
+        background: white;
+        border-radius: 8px;
+        padding: 10px 15px;
+        margin: 8px 0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+
+      .reply {
+        margin-left: 30px;
+        background: #f0f4f8;
+      }
+
+      button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        margin-left: 5px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      button:hover {
+        background: #004999;
+      }
+
+      #newCommentBox {
+        margin-bottom: 20px;
+      }
+
+      #newCommentBox input {
+        padding: 6px 10px;
+        margin-right: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      .author {
+        font-weight: bold;
+        color: #222;
+      }
+
+      .text {
+        margin-left: 4px;
+      }
+      /* Add this for smoother lines on replies */
+      .reply {
+        margin-left: 30px;
+        background: #f0f4f8;
+        position: relative;
+      }
+
+      .reply::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -15px;
+        width: 2px;
+        height: 100%;
+        background: #ccc;
+      }
+      .comment,
+      .reply {
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      #newCommentBox textarea {
+        padding: 6px 10px;
+        margin-right: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+        width: 200px;
+        height: 40px;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+      }
+      .time {
+        font-size: 10px;
+        color: #888;
+        margin-left: 5px;
+      }
+      .comment,
+      .reply {
+        display: flex;
+        align-items: center;
+      }
+
+      .avatar {
+        width: 24px;
+        height: 24px;
+        background: #0066cc;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 24px;
+        font-size: 12px;
+        margin-right: 8px;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Comments</h2>
+    <div id="newCommentBox">
+      <textarea id="newCommentText" placeholder="Write a comment"></textarea>
+
+      <input type="text" id="newCommentAuthor" placeholder="Your name" />
+      <button onclick="addNewComment()">Add Comment</button>
+    </div>
+
+    <div id="commentsContainer"></div>
+
+    <script>
+      let idCounter = 1;
+
+      class CommentNode {
+        constructor(text, author) {
+          this.id = idCounter++;
+          this.text = text;
+          this.author = author;
+          this.next = null;
+          this.replies = [];
+          this.timestamp = new Date();
+        }
+
+        addReply(text, author) {
+          const reply = new CommentNode(text, author);
+          this.replies.push(reply);
+        }
+
+        deleteReplyById(id) {
+          this.replies = this.replies.filter((reply) => reply.id !== id);
+          for (const reply of this.replies) {
+            reply.deleteReplyById(id);
+          }
+        }
+      }
+
+      class CommentList {
+        constructor() {
+          this.head = null;
+        }
+
+        addComment(text, author) {
+          const newComment = new CommentNode(text, author);
+          if (!this.head) {
+            this.head = newComment;
+            return;
+          }
+          let current = this.head;
+          while (current.next) {
+            current = current.next;
+          }
+          current.next = newComment;
+        }
+
+        deleteCommentById(id) {
+          if (!this.head) return;
+          if (this.head.id === id) {
+            this.head = this.head.next;
+            return;
+          }
+          let prev = null;
+          let current = this.head;
+          while (current && current.id !== id) {
+            prev = current;
+            current = current.next;
+          }
+          if (current) {
+            prev.next = current.next;
+          } else {
+            let node = this.head;
+            while (node) {
+              node.deleteReplyById(id);
+              node = node.next;
+            }
+          }
+        }
+
+        renderComments() {
+          let html = "";
+          let current = this.head;
+          while (current) {
+            html += renderNode(current);
+            current = current.next;
+          }
+          return html;
+        }
+      }
+
+      // Global comment list
+      const comments = new CommentList();
+
+      // Sample data
+      comments.addComment("Great post!", "Alice");
+      let first = comments.head;
+      first.addReply("Thanks Alice!", "Bob");
+      first.addReply("I agree!", "Dave");
+
+      comments.addComment("Thanks for sharing!", "Charlie");
+
+      updateView();
+
+      // --- DOM handlers ---
+      function addNewComment() {
+        const text = document.getElementById("newCommentText").value.trim();
+        const author = document.getElementById("newCommentAuthor").value.trim();
+        if (text && author) {
+          comments.addComment(text, author);
+          document.getElementById("newCommentText").value = "";
+          document.getElementById("newCommentAuthor").value = "";
+          updateView();
+        }
+      }
+
+      function replyToComment(id) {
+        const replyText = prompt("Reply text:");
+        const replyAuthor = prompt("Your name:");
+        if (replyText && replyAuthor) {
+          findAndAddReply(comments.head, id, replyText, replyAuthor);
+          updateView();
+        }
+      }
+
+      function deleteComment(id) {
+        comments.deleteCommentById(id);
+        updateView();
+      }
+
+      // --- Helpers ---
+      function updateView() {
+        document.getElementById("commentsContainer").innerHTML =
+          comments.renderComments();
+      }
+
+      function renderNode(node, isReply = false) {
+        let html = `<div class="avatar">${node.author
+          .charAt(0)
+          .toUpperCase()}</div>
+    <div class="${isReply ? "reply" : "comment"}">
+    <span class="author">${node.author}</span><span class="text">: ${
+          node.text
+        }</span>
+        <span class="time"> (${node.timestamp.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })})</span>
+
+   <button onclick="replyToComment(${node.id})">↩️ Reply</button>
+  <button onclick="deleteComment(${node.id})">🗑️ Delete</button>
+
+  </div>`;
+        for (const reply of node.replies) {
+          html += renderNode(reply, true);
+        }
+        return html;
+      }
+
+      function findAndAddReply(node, id, text, author) {
+        if (!node) return;
+        if (node.id === id) {
+          node.addReply(text, author);
+          return;
+        }
+        for (const reply of node.replies) {
+          findAndAddReply(reply, id, text, author);
+        }
+        if (node.next) {
+          findAndAddReply(node.next, id, text, author);
+        }
+      }
+      document
+        .getElementById("newCommentText")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            addNewComment();
+          }
+        });
+    </script>
+  </body>
+</html>
