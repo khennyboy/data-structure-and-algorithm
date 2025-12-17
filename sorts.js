@@ -83,3 +83,5 @@ console.log(sort2);
 console.log(sort3);
 mergeSort([4, 2, 6, 5, 1, 3]);
 
+console.log(btoa("I love programming"));
+console.log(atob("SSBsb3ZlIHByb2dyYW1taW5n"));
