@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Modern Comment System</title>
+    <script src="./comment.js" defer></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: #f7f9fb;
+        margin: 0;
+        padding: 30px;
+      }
+      input:focus {
+        outline: none;
+      }
+      h2 {
+        color: #333;
+      }
+
+      .comment,
+      .reply {
+        background: white;
+        border-radius: 8px;
+        padding: 10px 15px;
+        margin: 8px 0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+
+      .reply {
+        margin-left: 30px;
+        background: #f0f4f8;
+      }
+
+      button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        margin-left: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease-in;
+      }
+
+      button:hover {
+        background: #004999;
+      }
+
+      #newCommentBox {
+        margin-bottom: 20px;
+      }
+
+      #newCommentBox input {
+        padding: 6px 10px;
+        margin-right: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      .author {
+        font-weight: bold;
+        color: #222;
+      }
+
+      .text {
+        margin-left: 4px;
+      }
+      /* Add this for smoother lines on replies */
+      .reply {
+        margin-left: 30px;
+        background: #f0f4f8;
+        position: relative;
+      }
+
+      .reply::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -15px;
+        width: 2px;
+        height: 100%;
+        background: #ccc;
+      }
+      .comment,
+      .reply {
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      #newCommentBox {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      #newCommentBox textarea {
+        padding: 6px 10px;
+        margin-right: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+        flex: 1 0 100%;
+        max-width: 500px;
+        height: 100px;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        &:focus {
+          outline: 2px solid #004999;
+        }
+      }
+      .time {
+        font-size: 10px;
+        color: #888;
+        margin-left: 5px;
+      }
+      .comment,
+      .reply {
+        display: flex;
+        align-items: center;
+      }
+      .comment:not(:first-child) {
+        margin-top: 2rem;
+      }
+      .reply {
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Comments</h2>
+    <div id="newCommentBox">
+      <textarea id="newCommentText" placeholder="Write a comment"></textarea>
+
+      <input
+        type="text"
+        id="newCommentAuthor"
+        placeholder="Your name"
+        aria-label="comment"
+      />
+      <button onclick="addNewComment()">Add Comment</button>
+    </div>
+
+    <div id="commentsContainer"></div>
+  </body>
+</html>
